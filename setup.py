@@ -70,7 +70,7 @@ setup(
     package_dir={"": "src"},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
-    install_requires=["boto3", "docopt", "setuptools >= 24.2.0", "schema"],
+    install_requires=["boto3", "botocore", "docopt", "setuptools >= 24.2.0", "schema"],
     extras_require={
         "test": [
             "pre-commit",
