@@ -1,9 +1,12 @@
 """Manage CyHy operator data SSM parameters.
 
 Usage:
-  manage-cyhy-ops add [--debug] [--regions=REGIONS] [--overwrite] [--username=USERNAME] SSH_KEY
-  manage-cyhy-ops remove [--debug] [--regions=REGIONS] [--full] USERNAME
-  manage-cyhy-ops list [--debug] [--regions=REGIONS] USERNAME
+  manage-cyhy-ops [--debug] [--regions=REGIONS] [--ssm-cyhy-ops=CYHY_OPS]
+    [--ssm-ssh-prefix=SSH_PREFIX] add [--overwrite] [--username=USERNAME] SSH_KEY
+  manage-cyhy-ops [--debug] [--regions=REGIONS] [--ssm-cyhy-ops=CYHY_OPS]
+    [--ssm-ssh-prefix=SSH_PREFIX] remove [--full] USERNAME
+  manage-cyhy-ops [--debug] [--regions=REGIONS] [--ssm-cyhy-ops=CYHY_OPS]
+    [--ssm-ssh-prefix=SSH_PREFIX] list USERNAME
   manage-cyhy-ops (-h | --help)
   manage-cyhy-ops --version
 
@@ -14,13 +17,19 @@ Arguments:
   USERNAME  A username in the format "firstname.lastname".
 
 Options:
-  -h --help          Show this message.
-  --version          Show version.
-  --debug            Enable debug messages.
-  --regions=REGIONS  Comma delimited list of AWS regions to use.
-                     [default: us-east-1,us-east-2,us-west-1,us-west-2]
-  --overwrite        Overwrite the user's SSH key if one already exists.
-  --full             Also remove the user's SSH key from SSM.
+  -h --help                    Show this message.
+  --version                    Show version.
+  --debug                      Enable debug messages.
+  --regions=REGIONS            Comma delimited list of AWS regions to use.
+                               [default: us-east-1,us-east-2,us-west-1,us-west-2]
+  --ssm-cyhy-ops=CYHY_OPS      The key that is used in the Parameter Store for
+                               the list of active CyHy Operators.
+                               [default: /cyhy/ops/users]
+  --ssm-ssh-prefix=SSH_PREFIX  The prefix to use when working with SSH keys
+                               stored in the Parameter Store.
+                               [default: /ssh/public_keys]
+  --overwrite                  Overwrite the user's SSH key if one already exists.
+  --full                       Also remove the user's SSH key from SSM.
 """
 
 # Standard Python Libraries
@@ -37,10 +46,20 @@ from .manageoperators import ManageOperators
 
 ALLOWED_REGIONS = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
 # AWS only allows these characters in Parameter Store keys.
+VALID_SSM_CHARS = r"^[a-zA-Z0-9.\-_/]*$"
+# Subset of valid characters we'll allow for usernames.
 VALID_USERNAME = r"^[a-zA-Z0-9.\-_]*$"
 USERNAME_ERROR_MSG = (
     'Username must be in the format "firstname.lastname", and can only consist '
     'of letters, numbers, and the characters ".-_".'
+)
+# The Schema for an SSM key is used more than once so we define it here.
+SSM_KEY_VALIDATE = And(
+    str,
+    Use(str.lower),
+    Regex(VALID_SSM_CHARS),
+    lambda s: s[0] == "/" if "/" in s else True,
+    error="Invalid SSM key provided.",
 )
 # The Schema for a username is used in multiple places so we define it here.
 USERNAME_VALIDATE = Or(
@@ -68,6 +87,8 @@ def main() -> int:
                 else True,
                 error=f"Invalid region(s) provided. Valid regions are: {ALLOWED_REGIONS}",
             ),
+            "--ssm-ssh-prefix": SSM_KEY_VALIDATE,
+            "--ssm-cyhy-ops": SSM_KEY_VALIDATE,
             "--username": USERNAME_VALIDATE,
             "SSH_KEY": Or(
                 None,
@@ -99,7 +120,9 @@ def main() -> int:
 
     try:
         regions: List = validated_args["--regions"].split(",")
-        manager: ManageOperators = ManageOperators(regions)
+        cyhy_ops: str = validated_args["--ssm-cyhy-ops"]
+        ssh_prefix: str = validated_args["--ssm-ssh-prefix"]
+        manager: ManageOperators = ManageOperators(regions, cyhy_ops, ssh_prefix)
     except Exception as e:
         logging.error(e)
         return 1

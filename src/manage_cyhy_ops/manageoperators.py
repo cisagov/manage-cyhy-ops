@@ -8,9 +8,6 @@ from typing import Dict, List
 import boto3
 from botocore.exceptions import ClientError
 
-SSM_SSH_KEY_PREFIX = "/test/ssh/public_keys/"
-SSM_CYHY_OPS_USERNAMES = "/test/cyhy/ops/users"
-
 
 class ManageOperators:
     """Provide a manager for CyHy Operators.
@@ -19,8 +16,10 @@ class ManageOperators:
     SSM Parameter Store.
     """
 
-    def __init__(self, regions: List):
+    def __init__(self, regions: List, cyhy_ops_key: str, ssh_key_prefix: str):
         """Set up an operator manager."""
+        self.cyhy_ops_key = cyhy_ops_key
+        self.ssh_key_prefix = ssh_key_prefix
         self.clients: Dict = {}
         for region in regions:
             try:
@@ -37,13 +36,11 @@ class ManageOperators:
 
         users: List = []
         try:
-            response = client.get_parameter(
-                Name=SSM_CYHY_OPS_USERNAMES, WithDecryption=True
-            )
+            response = client.get_parameter(Name=self.cyhy_ops_key, WithDecryption=True)
             users = response["Parameter"]["Value"].split(",")
         except client.exceptions.ParameterNotFound:
             logging.warning(
-                f'The CyHy Operators parameter "{SSM_CYHY_OPS_USERNAMES}" '
+                f'The CyHy Operators parameter "{self.cyhy_ops_key}" '
                 f'does not exist in region "{region}".'
             )
         except ClientError as e:
@@ -78,7 +75,7 @@ class ManageOperators:
                     f'from region "{region}".'
                 )
                 # Response is an empty dictionary on success.
-                client.delete_parameter(Name=SSM_CYHY_OPS_USERNAMES)
+                client.delete_parameter(Name=self.cyhy_ops_key)
             except ClientError as e:
                 logging.error(
                     "Unable to delete the CyHy Operators parameter in "
@@ -96,7 +93,7 @@ class ManageOperators:
                 # number and the parameter tier.
                 # Neither are useful to us at this time, so we don't store them..
                 client.put_parameter(
-                    Name=SSM_CYHY_OPS_USERNAMES,
+                    Name=self.cyhy_ops_key,
                     Value=updated_users,
                     Type="SecureString",
                     Overwrite=True,
@@ -106,7 +103,7 @@ class ManageOperators:
                 )
             except ClientError as e:
                 logging.error(
-                    f'Unable to update parameter "{SSM_CYHY_OPS_USERNAMES}" '
+                    f'Unable to update parameter "{self.cyhy_ops_key}" '
                     f'in region "{region}".'
                 )
                 logging.error(e)
@@ -125,10 +122,10 @@ class ManageOperators:
                 # Neither are useful to us at this time, so we don't store them..
                 logging.debug(
                     f'Adding SSH key to Parameter Store in "{region}" with key '
-                    f'"{SSM_SSH_KEY_PREFIX}{username}".'
+                    f'"{self.ssh_key_prefix}/{username}".'
                 )
                 client.put_parameter(
-                    Name=f"{SSM_SSH_KEY_PREFIX}{username}",
+                    Name=f"{self.ssh_key_prefix}/{username}",
                     Value=ssh_key,
                     Type="SecureString",
                     Overwrite=overwrite,
@@ -164,7 +161,7 @@ class ManageOperators:
         for region, client in self.clients.items():
             if full:
                 try:
-                    parameter_name = f"{SSM_SSH_KEY_PREFIX}{username}"
+                    parameter_name = f"{self.ssh_key_prefix}/{username}"
                     # Response is an empty dictionary on success.
                     client.delete_parameter(Name=parameter_name)
                     logging.info(
@@ -190,7 +187,7 @@ class ManageOperators:
         for region, client in self.clients.items():
             try:
                 response = client.get_parameter(
-                    Name=f"{SSM_SSH_KEY_PREFIX}{username}", WithDecryption=True
+                    Name=f"{self.ssh_key_prefix}/{username}", WithDecryption=True
                 )
                 logging.info(
                     f'User "{username}" has the following SSH key in the '
@@ -208,7 +205,7 @@ class ManageOperators:
 
             try:
                 response = client.get_parameter(
-                    Name=SSM_CYHY_OPS_USERNAMES, WithDecryption=True
+                    Name=self.cyhy_ops_key, WithDecryption=True
                 )
                 enabled_users = response["Parameter"]["Value"].split(",")
                 if username in enabled_users:
@@ -221,7 +218,7 @@ class ManageOperators:
                 )
             except client.exceptions.ParameterNotFound:
                 logging.warning(
-                    f'The CyHy Operators parameter "{SSM_CYHY_OPS_USERNAMES}" '
+                    f'The CyHy Operators parameter "{self.cyhy_ops_key}" '
                     f'does not exist in region "{region}".'
                 )
             except ClientError as e:
