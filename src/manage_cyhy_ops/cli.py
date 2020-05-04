@@ -32,8 +32,10 @@ from typing import Any, Dict, List
 import docopt
 from schema import And, Or, Regex, Schema, SchemaError, Use
 
+# cisagov Libraries
+from manageoperators import ManageOperators
+
 from ._version import __version__
-from .ssm import ManageOperators
 
 ALLOWED_REGIONS = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
 VALID_USERNAME = r"^[a-zA-Z0-9.\-_]*$"
