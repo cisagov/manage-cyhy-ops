@@ -32,17 +32,17 @@ from typing import Any, Dict, List
 import docopt
 from schema import And, Or, Regex, Schema, SchemaError, Use
 
-# cisagov Libraries
-from manageoperators import ManageOperators
-
 from ._version import __version__
+from .manageoperators import ManageOperators
 
 ALLOWED_REGIONS = ["us-east-1", "us-east-2", "us-west-1", "us-west-2"]
+# AWS only allows these characters in Parameter Store keys.
 VALID_USERNAME = r"^[a-zA-Z0-9.\-_]*$"
 USERNAME_ERROR_MSG = (
     'Username must be in the format "firstname.lastname", and can only consist '
     'of letters, numbers, and the characters ".-_".'
 )
+# The Schema for a username is used in multiple places so we define it here.
 USERNAME_VALIDATE = Or(
     None,
     And(
@@ -117,9 +117,17 @@ def main() -> int:
                 logging.error(err)
                 return 1
 
-        manager.add_user(username, ssh_key, overwrite=validated_args["--overwrite"])
+        return manager.add_user(
+            username, ssh_key, overwrite=validated_args["--overwrite"]
+        )
     elif validated_args["remove"]:
-        manager.remove_user(validated_args["USERNAME"], validated_args["--full"])
+        return manager.remove_user(validated_args["USERNAME"], validated_args["--full"])
     elif validated_args["list"]:
-        manager.check_user(validated_args["USERNAME"])
+        return manager.check_user(validated_args["USERNAME"])
+
+    logging.info("Feature not implemented yet.")
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

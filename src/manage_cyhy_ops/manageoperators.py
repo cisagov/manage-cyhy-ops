@@ -26,10 +26,12 @@ class ManageOperators:
             try:
                 self.clients[region] = boto3.client("ssm", region_name=region)
             except ClientError as e:
-                logging.error(f"Unable to setup SSM client in region {region}.")
+                logging.error(f'Unable to setup SSM client in region "{region}".')
                 raise e
 
-    def update_cyhy_ops_users(self, username: str, region: str, remove: bool = False):
+    def update_cyhy_ops_users(
+        self, username: str, region: str, remove: bool = False
+    ) -> int:
         """Update the list of CyHy Operators to use when an instance is built."""
         client = self.clients[region]
 
@@ -44,35 +46,46 @@ class ManageOperators:
                 f'The CyHy Operators parameter "{SSM_CYHY_OPS_USERNAMES}" '
                 f'does not exist in region "{region}".'
             )
+        except ClientError as e:
+            logging.error(e)
+            return 1
 
         logging.debug("Current CyHy Operators: {users}.")
 
         if remove:
             if username not in users:
                 logging.warning(
-                    f'User "{username}" is not in the list of active CyHy Operators.'
+                    f'User "{username}" is not in the list of active '
+                    f'CyHy Operators in region "{region}".'
                 )
             else:
                 users.remove(username)
+                update_msg = f'removed "{username}" from'
         else:
             if username in users:
                 logging.warning(
                     f'User "{username}" is already in the list of active '
-                    "CyHy Operators."
+                    f'CyHy Operators in region "{region}".'
                 )
             else:
                 users.append(username)
+                update_msg = f'added "{username}" to'
 
         if len(users) == 0:
             try:
                 logging.warning(
-                    "No CyHy Operators left, deleting parameter "
+                    "No CyHy Operators left, deleting CyHy Operators parameter "
                     f'from region "{region}".'
                 )
                 # Response is an empty dictionary on success.
                 client.delete_parameter(Name=SSM_CYHY_OPS_USERNAMES)
             except ClientError as e:
+                logging.error(
+                    "Unable to delete the CyHy Operators parameter in "
+                    f'region "{region}".'
+                )
                 logging.error(e)
+                return 1
         else:
             updated_users = ",".join(users)
 
@@ -88,16 +101,22 @@ class ManageOperators:
                     Type="SecureString",
                     Overwrite=True,
                 )
-                logging.info(f'Successfully updated CyHy Operators in "{region}".')
-            except Exception as e:
-                logging.warning(
+                logging.info(
+                    f'Successfully {update_msg} CyHy Operators in region "{region}".'
+                )
+            except ClientError as e:
+                logging.error(
                     f'Unable to update parameter "{SSM_CYHY_OPS_USERNAMES}" '
                     f'in region "{region}".'
                 )
-                logging.warning(e)
+                logging.error(e)
+                return 1
+        return 0
 
-    def add_user(self, username: str, ssh_key: str, overwrite: bool = False):
+    def add_user(self, username: str, ssh_key: str, overwrite: bool = False) -> int:
         """Add an Operator to the Parameter Store."""
+        return_value = 0
+
         # Should this be atomic?
         for region, client in self.clients.items():
             try:
@@ -129,11 +148,18 @@ class ManageOperators:
                 )
             except ClientError as e:
                 logging.error(e)
+                return 1
 
-            self.update_cyhy_ops_users(username, region)
+            ret = self.update_cyhy_ops_users(username, region)
+            if ret:
+                return_value = ret
+
+        return return_value
 
     def remove_user(self, username: str, full: bool = False):
         """Remove an Operator from the Parameter Store."""
+        return_value = 0
+
         # Should this be atomic?
         for region, client in self.clients.items():
             if full:
@@ -141,6 +167,10 @@ class ManageOperators:
                     parameter_name = f"{SSM_SSH_KEY_PREFIX}{username}"
                     # Response is an empty dictionary on success.
                     client.delete_parameter(Name=parameter_name)
+                    logging.info(
+                        f'Successfully removed SSH key for user "{username}" '
+                        f'in region "{region}".'
+                    )
                 except client.exceptions.ParameterNotFound:
                     logging.warning(
                         f'User "{username}" dot not have an SSH key stored in '
@@ -148,13 +178,14 @@ class ManageOperators:
                     )
                 except ClientError as e:
                     logging.error(e)
-            self.update_cyhy_ops_users(username, region, remove=True)
-            logging.info(
-                f'Successfully removed "{username}" from CyHy Operators '
-                f'in region "{region}".'
-            )
+                    return 1
+            ret = self.update_cyhy_ops_users(username, region, remove=True)
+            if ret:
+                return_value = ret
 
-    def check_user(self, username: str):
+        return return_value
+
+    def check_user(self, username: str) -> int:
         """Check for the existence of an Operator and return information."""
         for region, client in self.clients.items():
             try:
@@ -173,6 +204,8 @@ class ManageOperators:
                 )
             except ClientError as e:
                 logging.error(e)
+                return 1
+
             try:
                 response = client.get_parameter(
                     Name=SSM_CYHY_OPS_USERNAMES, WithDecryption=True
@@ -191,3 +224,8 @@ class ManageOperators:
                     f'The CyHy Operators parameter "{SSM_CYHY_OPS_USERNAMES}" '
                     f'does not exist in region "{region}".'
                 )
+            except ClientError as e:
+                logging.error(e)
+                return 1
+
+        return 0
