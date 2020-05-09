@@ -122,11 +122,18 @@ def main() -> int:
         regions: List = validated_args["--regions"].split(",")
         cyhy_ops: str = validated_args["--ssm-cyhy-ops"]
         ssh_prefix: str = validated_args["--ssm-ssh-prefix"]
-        manager: ManageOperators = ManageOperators(regions, cyhy_ops, ssh_prefix)
+        managers: List[ManageOperators] = []
+        for region in regions:
+            managers.append(ManageOperators(region, cyhy_ops, ssh_prefix))
     except Exception as e:
         logging.error(e)
         return 1
 
+    username = validated_args["USERNAME"]
+    overwrite_ssh_key = validated_args["--overwrite"]
+    delete_ssh_key = validated_args["--full"]
+
+    results: List[int] = []
     if validated_args["add"]:
         ssh_key: str = validated_args["SSH_KEY"]
 
@@ -140,16 +147,25 @@ def main() -> int:
                 logging.error(err)
                 return 1
 
-        return manager.add_user(
-            username, ssh_key, overwrite=validated_args["--overwrite"]
-        )
+        for manager in managers:
+            results.append(
+                manager.add_user(username, ssh_key, overwrite=overwrite_ssh_key)
+            )
     elif validated_args["remove"]:
-        return manager.remove_user(validated_args["USERNAME"], validated_args["--full"])
+        for manager in managers:
+            results.append(manager.remove_user(username, delete_ssh_key))
     elif validated_args["list"]:
-        return manager.check_user(validated_args["USERNAME"])
+        for manager in managers:
+            results.append(manager.check_user(username))
+    else:
+        logging.info("Feature not implemented yet.")
 
-    logging.info("Feature not implemented yet.")
-    return 0
+    # Right now all return statuses from the Manager are 1, but that is not
+    # guaranteed in the future. This handles any non-successful error code.
+    if True in map(lambda e: e != 0, results):
+        return 1
+    else:
+        return 0
 
 
 if __name__ == "__main__":
