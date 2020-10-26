@@ -6,17 +6,18 @@
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/manage-cyhy-ops.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/manage-cyhy-ops/context:python)
 [![Known Vulnerabilities](https://snyk.io/test/github/cisagov/manage-cyhy-ops/develop/badge.svg)](https://snyk.io/test/github/cisagov/manage-cyhy-ops)
 
-This is a generic skeleton project that can be used to quickly get a
-new [cisagov](https://github.com/cisagov) Python library GitHub
-project started.  This skeleton project contains [licensing
-information](LICENSE), as well as
-[pre-commit hooks](https://pre-commit.com) and
-[GitHub Actions](https://github.com/features/actions) configurations
-appropriate for a Python library project.
+This is a Python package to manage the list of SSH users to add to a system
+using the
+[AWS Systems Manager's Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/features.html#parameter-store)
+. This is used by
+[cisagov/ansible-role-dev-ssh-access](https://github.com/cisagov/ansible-role-dev-ssh-access)
+and in [cisagov/cyhy_amis](https://github.com/cisagov/cyhy_amis) in the
+[cyhy_ops Ansible role](https://github.com/cisagov/cyhy_amis/blob/develop/ansible/roles/cyhy_ops)
+.
 
 ## Contributing ##
 
-We welcome contributions!  Please see [here](CONTRIBUTING.md) for
+We welcome contributions!  Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
 details.
 
 ## License ##
