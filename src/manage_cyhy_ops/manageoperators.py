@@ -27,7 +27,7 @@ class ManageOperators:
             logging.error(f'Unable to setup SSM client in region "{region}".')
             raise e
 
-    def _get_cyhy_ops_list(self):
+    def _get_cyhy_ops_list(self) -> List[str]:
         users: List[str] = []
         try:
             response = self._client.get_parameter(
@@ -155,7 +155,7 @@ class ManageOperators:
 
         return return_value
 
-    def remove_user(self, username: str, full: bool = False):
+    def remove_user(self, username: str, full: bool = False) -> int:
         """Remove an Operator from the Parameter Store."""
         return_value = 0
 
