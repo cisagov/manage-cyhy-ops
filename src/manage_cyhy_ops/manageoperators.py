@@ -70,47 +70,32 @@ class ManageOperators:
                 users.append(username)
                 update_msg = f'added "{username}" to'
 
-        if len(users) == 0:
-            try:
-                logging.warning(
-                    "No CyHy Operators left, deleting CyHy Operators parameter "
-                    f'from region "{self.region}".'
-                )
-                # Response is an empty dictionary on success.
-                self._client.delete_parameter(Name=self.cyhy_ops_key)
-            except ClientError as e:
-                logging.error(
-                    "Unable to delete the CyHy Operators parameter in "
-                    f'region "{self.region}".'
-                )
-                logging.error(e)
-                return 1
-        else:
-            updated_users = ",".join(users)
+        updated_users = ",".join(users)
 
-            logging.debug(f'New CyHy Operators value: "{updated_users}".')
+        logging.debug(f'New CyHy Operators value: "{updated_users}".')
 
-            try:
-                # The SSM response on success currently only contains a version
-                # number and the parameter tier.
-                # Neither are useful to us at this time, so we don't store them..
-                self._client.put_parameter(
-                    Name=self.cyhy_ops_key,
-                    Value=updated_users,
-                    Type="SecureString",
-                    Overwrite=True,
-                )
-                logging.info(
-                    f"Successfully {update_msg} CyHy Operators in region "
-                    f'"{self.region}".'
-                )
-            except ClientError as e:
-                logging.error(
-                    f'Unable to update parameter "{self.cyhy_ops_key}" '
-                    f'in region "{self.region}".'
-                )
-                logging.error(e)
-                return 1
+        try:
+            # The SSM response on success currently only contains a version
+            # number and the parameter tier.
+            # Neither are useful to us at this time, so we don't store them..
+            self._client.put_parameter(
+                Name=self.cyhy_ops_key,
+                Value=updated_users,
+                Type="SecureString",
+                Overwrite=True,
+            )
+            logging.info(
+                f"Successfully {update_msg} CyHy Operators in region "
+                f'"{self.region}".'
+            )
+        except ClientError as e:
+            logging.error(
+                f'Unable to update parameter "{self.cyhy_ops_key}" '
+                f'in region "{self.region}".'
+            )
+            logging.error(e)
+            return 1
+
         return 0
 
     def add_user(self, username: str, ssh_key: str, overwrite: bool = False) -> int:
