@@ -23,9 +23,9 @@ class ManageOperators:
         self.region = region
         try:
             self._client = boto3.client("ssm", region_name=region)
-        except ClientError as e:
+        except ClientError as err:
             logging.error('Unable to setup SSM client in region "%s".', region)
-            raise e
+            raise err
 
     def _get_cyhy_ops_list(self) -> List[str]:
         users: List[str] = []
@@ -40,8 +40,8 @@ class ManageOperators:
                 self.cyhy_ops_key,
                 self.region,
             )
-        except ClientError as e:
-            logging.error(e)
+        except ClientError as err:
+            logging.error(err)
 
         return users
 
@@ -89,13 +89,13 @@ class ManageOperators:
             )
             log_msg = f'Successfully {update_msg} CyHy Operators in region "%s"'
             logging.info(log_msg, username, self.region)
-        except ClientError as e:
+        except ClientError as err:
             logging.error(
                 'Unable to update parameter "%s" in region "%s".',
                 self.cyhy_ops_key,
                 self.region,
             )
-            logging.error(e)
+            logging.error(err)
             return 1
 
         return 0
@@ -133,8 +133,8 @@ class ManageOperators:
             logging.warning(
                 'If you need to overwrite this value, please use the "--overwrite" switch.'
             )
-        except ClientError as e:
-            logging.error(e)
+        except ClientError as err:
+            logging.error(err)
             return 1
 
         return self._update_cyhy_ops_users(username)
@@ -158,8 +158,8 @@ class ManageOperators:
                     username,
                     self.region,
                 )
-            except ClientError as e:
-                logging.error(e)
+            except ClientError as err:
+                logging.error(err)
                 return 1
 
         return self._update_cyhy_ops_users(username, remove=True)
@@ -182,8 +182,8 @@ class ManageOperators:
                 username,
                 self.region,
             )
-        except ClientError as e:
-            logging.error(e)
+        except ClientError as err:
+            logging.error(err)
             return 1
 
         enabled_users: List[str] = self._get_cyhy_ops_list()

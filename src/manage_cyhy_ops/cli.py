@@ -125,8 +125,8 @@ def main() -> int:
         managers: List[ManageOperators] = []
         for region in regions:
             managers.append(ManageOperators(region, cyhy_ops, ssh_prefix))
-    except Exception as e:
-        logging.error(e)
+    except Exception as err:
+        logging.error(err)
         return 1
 
     username = validated_args["USERNAME"]
