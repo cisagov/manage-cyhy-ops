@@ -47,6 +47,7 @@ class ManageOperators:
     def _update_cyhy_ops_users(self, username: str, remove: bool = False) -> int:
         """Update the list of CyHy Operators to use when an instance is built."""
         users: List[str] = self._get_cyhy_ops_list()
+        update_msg: str = "performed no operations on"
 
         logging.debug("Current CyHy Operators: {users}.")
 
