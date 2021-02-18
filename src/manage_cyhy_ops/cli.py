@@ -83,8 +83,7 @@ def main() -> int:
             "--regions": And(
                 str,
                 lambda s: False
-                if False in map(lambda e: e in ALLOWED_REGIONS, s.split(","))
-                else True,
+                not in map(lambda r: r in ALLOWED_REGIONS, s.split(",")),
                 error=f"Invalid region(s) provided. Valid regions are: {ALLOWED_REGIONS}",
             ),
             "--ssm-ssh-prefix": SSM_KEY_VALIDATE,
@@ -164,5 +163,5 @@ def main() -> int:
     # guaranteed in the future. This handles any non-successful error code.
     if True in map(lambda e: e != 0, results):
         return 1
-    else:
-        return 0
+
+    return 0
