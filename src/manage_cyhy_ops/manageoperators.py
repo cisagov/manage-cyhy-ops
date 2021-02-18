@@ -24,7 +24,7 @@ class ManageOperators:
         try:
             self._client = boto3.client("ssm", region_name=region)
         except ClientError as e:
-            logging.error(f'Unable to setup SSM client in region "{region}".')
+            logging.error('Unable to setup SSM client in region "%s".', region)
             raise e
 
     def _get_cyhy_ops_list(self) -> List[str]:
@@ -36,8 +36,9 @@ class ManageOperators:
             users = response.get("Parameter", {}).get("Value", "").split(",")
         except self._client.exceptions.ParameterNotFound:
             logging.warning(
-                f'The CyHy Operators parameter "{self.cyhy_ops_key}" '
-                f'does not exist in region "{self.region}".'
+                'The CyHy Operators parameter "%s" does not exist in region "%s".',
+                self.cyhy_ops_key,
+                self.region,
             )
         except ClientError as e:
             logging.error(e)
@@ -49,30 +50,32 @@ class ManageOperators:
         users: List[str] = self._get_cyhy_ops_list()
         update_msg: str = "performed no operations on"
 
-        logging.debug("Current CyHy Operators: {users}.")
+        logging.debug("Current CyHy Operators: %s.", users)
 
         if remove:
             if username not in users:
                 logging.warning(
-                    f'User "{username}" is not in the list of active '
-                    f'CyHy Operators in region "{self.region}".'
+                    'User "%s" is not in the list of active CyHy Operators in region "%s".',
+                    username,
+                    self.region,
                 )
             else:
                 users.remove(username)
-                update_msg = f'removed "{username}" from'
+                update_msg = 'removed "%s" from'
         else:
             if username in users:
                 logging.warning(
-                    f'User "{username}" is already in the list of active '
-                    f'CyHy Operators in region "{self.region}".'
+                    'User "%s" is already in the list of active CyHy Operators in region "%s".',
+                    username,
+                    self.region,
                 )
             else:
                 users.append(username)
-                update_msg = f'added "{username}" to'
+                update_msg = 'added "%s" to'
 
         updated_users = ",".join(sorted(users))
 
-        logging.debug(f'New CyHy Operators value: "{updated_users}".')
+        logging.debug('New CyHy Operators value: "%s".', updated_users)
 
         try:
             # The SSM response on success currently only contains a version
@@ -84,14 +87,13 @@ class ManageOperators:
                 Type="SecureString",
                 Overwrite=True,
             )
-            logging.info(
-                f"Successfully {update_msg} CyHy Operators in region "
-                f'"{self.region}".'
-            )
+            log_msg = f'Successfully {update_msg} CyHy Operators in region "%s"'
+            logging.info(log_msg, username, self.region)
         except ClientError as e:
             logging.error(
-                f'Unable to update parameter "{self.cyhy_ops_key}" '
-                f'in region "{self.region}".'
+                'Unable to update parameter "%s" in region "%s".',
+                self.cyhy_ops_key,
+                self.region,
             )
             logging.error(e)
             return 1
@@ -106,8 +108,10 @@ class ManageOperators:
             # number and the parameter tier.
             # Neither are useful to us at this time, so we don't store them..
             logging.debug(
-                f'Adding SSH key to Parameter Store in "{self.region}" with key '
-                f'"{self.ssh_key_prefix}/{username}".'
+                'Adding SSH key to Parameter Store in "%s" with key "%s/%s".',
+                self.region,
+                self.ssh_key_prefix,
+                username,
             )
             self._client.put_parameter(
                 Name=f"{self.ssh_key_prefix}/{username}",
@@ -116,17 +120,18 @@ class ManageOperators:
                 Overwrite=overwrite,
             )
             logging.info(
-                f'Successfully added "{username}"\'s SSH key to the '
-                f'Parameter Store in "{self.region}".'
+                'Successfully added "%s"\'s SSH key to the Parameter Store in "%s".',
+                username,
+                self.region,
             )
         except self._client.exceptions.ParameterAlreadyExists:
             logging.warning(
-                f'SSH key for "{username}" already exists in the '
-                f'Parameter Store for region "{self.region}".'
+                'SSH key for "%s" already exists in the Parameter Store for region "%s".',
+                username,
+                self.region,
             )
             logging.warning(
-                "If you need to overwrite this value, please use the "
-                '"--overwrite" switch.'
+                'If you need to overwrite this value, please use the "--overwrite" switch.'
             )
         except ClientError as e:
             logging.error(e)
@@ -143,13 +148,15 @@ class ManageOperators:
                 # Response is an empty dictionary on success.
                 self._client.delete_parameter(Name=parameter_name)
                 logging.info(
-                    f'Successfully removed SSH key for user "{username}" '
-                    f'in region "{self.region}".'
+                    'Successfully removed SSH key for user "%s" in region "%s".',
+                    username,
+                    self.region,
                 )
             except self._client.exceptions.ParameterNotFound:
                 logging.warning(
-                    f'User "{username}" dot not have an SSH key stored in '
-                    f'the Parameter Store of region "{self.region}".'
+                    'User "%s" does not have an SSH key stored in  the Parameter Store of region "%s".',
+                    username,
+                    self.region,
                 )
             except ClientError as e:
                 logging.error(e)
@@ -164,14 +171,16 @@ class ManageOperators:
                 Name=f"{self.ssh_key_prefix}/{username}", WithDecryption=True
             )
             logging.info(
-                f'User "{username}" has the following SSH key in the '
-                f'Parameter Store of region "{self.region}":'
+                'User "%s" has the following SSH key in the Parameter Store of region "%s":',
+                username,
+                self.region,
             )
             logging.info(response["Parameter"]["Value"])
         except self._client.exceptions.ParameterNotFound:
             logging.info(
-                f'User "{username}" does not have an SSH key in the '
-                f'Parameter Store of region "{self.region}".'
+                'User "%s" does not have an SSH key in the Parameter Store of region "%s".',
+                username,
+                self.region,
             )
         except ClientError as e:
             logging.error(e)
@@ -181,13 +190,11 @@ class ManageOperators:
         if not enabled_users:
             return 1
 
-        if username in enabled_users:
-            user_status = "is set"
-        else:
-            user_status = "is not set"
-        logging.info(
-            f'User "{username}" {user_status} as a CyHy Operator '
-            f'in region "{self.region}".'
+        log_msg = (
+            'User "%s" is '
+            + ("" if username in enabled_users else "not ")
+            + 'set as a CyHy Operator in region "%s".'
         )
+        logging.info(log_msg, username, self.region)
 
         return 0
