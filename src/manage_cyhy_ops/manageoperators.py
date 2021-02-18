@@ -100,8 +100,6 @@ class ManageOperators:
 
     def add_user(self, username: str, ssh_key: str, overwrite: bool = False) -> int:
         """Add an Operator to the Parameter Store."""
-        return_value = 0
-
         # Should this be atomic?
         try:
             # The SSM response on success currently only contains a version
@@ -134,16 +132,10 @@ class ManageOperators:
             logging.error(e)
             return 1
 
-        ret = self._update_cyhy_ops_users(username)
-        if ret:
-            return_value = ret
-
-        return return_value
+        return self._update_cyhy_ops_users(username)
 
     def remove_user(self, username: str, full: bool = False) -> int:
         """Remove an Operator from the Parameter Store."""
-        return_value = 0
-
         # Should this be atomic?
         if full:
             try:
@@ -163,11 +155,7 @@ class ManageOperators:
                 logging.error(e)
                 return 1
 
-        ret = self._update_cyhy_ops_users(username, remove=True)
-        if ret:
-            return_value = ret
-
-        return return_value
+        return self._update_cyhy_ops_users(username, remove=True)
 
     def check_user(self, username: str) -> int:
         """Check for the existence of an Operator and return information."""
