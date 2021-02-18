@@ -70,7 +70,7 @@ class ManageOperators:
                 users.append(username)
                 update_msg = f'added "{username}" to'
 
-        updated_users = ",".join(users)
+        updated_users = ",".join(sorted(users))
 
         logging.debug(f'New CyHy Operators value: "{updated_users}".')
 
