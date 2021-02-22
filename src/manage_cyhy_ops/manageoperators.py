@@ -80,7 +80,7 @@ class ManageOperators:
         try:
             # The SSM response on success currently only contains a version
             # number and the parameter tier.
-            # Neither are useful to us at this time, so we don't store them..
+            # Neither are useful to us at this time, so we don't store them.
             self._client.put_parameter(
                 Name=self.cyhy_ops_key,
                 Value=updated_users,
@@ -106,7 +106,7 @@ class ManageOperators:
         try:
             # The SSM response on success currently only contains a version
             # number and the parameter tier.
-            # Neither are useful to us at this time, so we don't store them..
+            # Neither are useful to us at this time, so we don't store them.
             logging.debug(
                 'Adding SSH key to Parameter Store in "%s" with key "%s/%s".',
                 self.region,
