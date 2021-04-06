@@ -48,7 +48,7 @@ class ManageOperators:
     def _update_cyhy_ops_users(self, username: str, remove: bool = False) -> int:
         """Update the list of CyHy Operators to use when an instance is built."""
         users: List[str] = self._get_cyhy_ops_list()
-        update_msg: str = "performed no operations on"
+        update_msg: str = 'Performed no operations for "%s"'
 
         logging.debug("Current CyHy Operators: %s.", users)
 
@@ -61,7 +61,7 @@ class ManageOperators:
                 )
             else:
                 users.remove(username)
-                update_msg = 'removed "%s" from'
+                update_msg = 'Removed "%s" from Cyhy Operators'
         else:
             if username in users:
                 logging.warning(
@@ -71,7 +71,7 @@ class ManageOperators:
                 )
             else:
                 users.append(username)
-                update_msg = 'added "%s" to'
+                update_msg = 'Added "%s" to Cyhy Operators'
 
         updated_users = ",".join(sorted(users))
 
@@ -87,7 +87,7 @@ class ManageOperators:
                 Type="SecureString",
                 Overwrite=True,
             )
-            log_msg = f'Successfully {update_msg} CyHy Operators in region "%s"'
+            log_msg = f'{update_msg} in region "%s"'
             logging.info(log_msg, username, self.region)
         except ClientError as err:
             logging.error(
