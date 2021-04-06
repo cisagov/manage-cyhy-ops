@@ -120,7 +120,7 @@ class ManageOperators:
                 Overwrite=overwrite,
             )
             logging.info(
-                'Successfully added "%s"\'s SSH key to the Parameter Store in "%s".',
+                'Added "%s"\'s SSH key to the Parameter Store in "%s".',
                 username,
                 self.region,
             )
@@ -148,7 +148,7 @@ class ManageOperators:
                 # Response is an empty dictionary on success.
                 self._client.delete_parameter(Name=parameter_name)
                 logging.info(
-                    'Successfully removed SSH key for user "%s" in region "%s".',
+                    'Removed SSH key for user "%s" in region "%s".',
                     username,
                     self.region,
                 )
