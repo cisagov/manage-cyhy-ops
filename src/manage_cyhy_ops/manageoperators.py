@@ -87,7 +87,7 @@ class ManageOperators:
                 Type="SecureString",
                 Overwrite=True,
             )
-            log_msg = f'{update_msg} in region "%s"'
+            log_msg = f'{update_msg} in region "%s".'
             logging.info(log_msg, username, self.region)
         except ClientError as err:
             logging.error(
