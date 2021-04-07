@@ -108,10 +108,10 @@ class ManageOperators:
             # number and the parameter tier.
             # Neither are useful to us at this time, so we don't store them.
             logging.debug(
-                'Adding SSH key to Parameter Store in "%s" with key "%s/%s".',
-                self.region,
+                'Adding SSH key "%s/%s" to the Parameter Store in region "%s".',
                 self.ssh_key_prefix,
                 username,
+                self.region,
             )
             self._client.put_parameter(
                 Name=f"{self.ssh_key_prefix}/{username}",
@@ -126,7 +126,7 @@ class ManageOperators:
             )
         except self._client.exceptions.ParameterAlreadyExists:
             logging.warning(
-                'SSH key for "%s" already exists in the Parameter Store for region "%s".',
+                'SSH key for "%s" already exists in the Parameter Store in region "%s".',
                 username,
                 self.region,
             )
@@ -148,13 +148,13 @@ class ManageOperators:
                 # Response is an empty dictionary on success.
                 self._client.delete_parameter(Name=parameter_name)
                 logging.info(
-                    'Removed SSH key for user "%s" in region "%s".',
+                    'Removed SSH key for "%s" from the Parameter Store in region "%s".',
                     username,
                     self.region,
                 )
             except self._client.exceptions.ParameterNotFound:
                 logging.warning(
-                    'User "%s" does not have an SSH key stored in  the Parameter Store of region "%s".',
+                    'SSH key for "%s" does not exist in the Parameter Store in region "%s".',
                     username,
                     self.region,
                 )
