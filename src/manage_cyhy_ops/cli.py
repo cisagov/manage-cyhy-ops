@@ -74,7 +74,7 @@ USERNAME_VALIDATE = Or(
 )
 
 
-def main() -> int:
+def main() -> None:
     """Provide an interface to manage CyHy operators."""
     args: Dict[str, str] = docopt.docopt(__doc__, version=__version__)
 
@@ -107,7 +107,7 @@ def main() -> int:
     except SchemaError as err:
         # Exit because one or more of the arguments were invalid.
         print(err, file=sys.stderr)
-        return 1
+        sys.exit(1)
 
     # Set up logging.
     log_level: str = "DEBUG" if validated_args["--debug"] else "INFO"
@@ -126,7 +126,7 @@ def main() -> int:
             managers.append(ManageOperators(region, cyhy_ops, ssh_prefix))
     except Exception as err:
         logging.error(err)
-        return 1
+        sys.exit(1)
 
     username = validated_args["USERNAME"]
     overwrite_ssh_key = validated_args["--overwrite"]
@@ -144,7 +144,7 @@ def main() -> int:
                 username = Schema(USERNAME_VALIDATE).validate(ssh_key.split(" ")[2])
             except SchemaError as err:
                 logging.error(err)
-                return 1
+                sys.exit(1)
 
         for manager in managers:
             results.append(
@@ -162,6 +162,4 @@ def main() -> int:
     # Right now all return statuses from the Manager are 1, but that is not
     # guaranteed in the future. This handles any non-successful error code.
     if True in map(lambda e: e != 0, results):
-        return 1
-
-    return 0
+        sys.exit(1)
