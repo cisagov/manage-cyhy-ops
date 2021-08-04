@@ -45,7 +45,7 @@ class ManageOperators:
 
         return users
 
-    def _update_cyhy_ops_users(self, username: str, remove: bool = False) -> int:
+    def _update_cyhy_ops_users(self, user: str, remove: bool = False) -> int:
         """Update the list of CyHy Operators to use when an instance is built."""
         users: List[str] = self._get_cyhy_ops_list()
         update_msg: str = 'Performed no operations for "%s"'
@@ -53,24 +53,24 @@ class ManageOperators:
         logging.debug("Current CyHy Operators: %s.", users)
 
         if remove:
-            if username not in users:
+            if user not in users:
                 logging.warning(
                     'User "%s" is not in the list of active CyHy Operators in region "%s".',
-                    username,
+                    user,
                     self.region,
                 )
             else:
-                users.remove(username)
+                users.remove(user)
                 update_msg = 'Removed "%s" from Cyhy Operators'
         else:
-            if username in users:
+            if user in users:
                 logging.warning(
                     'User "%s" is already in the list of active CyHy Operators in region "%s".',
-                    username,
+                    user,
                     self.region,
                 )
             else:
-                users.append(username)
+                users.append(user)
                 update_msg = 'Added "%s" to Cyhy Operators'
 
         updated_users = ",".join(sorted(users))
@@ -88,7 +88,7 @@ class ManageOperators:
                 Overwrite=True,
             )
             log_msg = f'{update_msg} in region "%s".'
-            logging.info(log_msg, username, self.region)
+            logging.info(log_msg, user, self.region)
         except ClientError as err:
             logging.error(
                 'Unable to update parameter "%s" in region "%s".',
@@ -100,7 +100,7 @@ class ManageOperators:
 
         return 0
 
-    def add_user(self, username: str, ssh_key: str, overwrite: bool = False) -> int:
+    def add_user(self, user: str, ssh_key: str, overwrite: bool = False) -> int:
         """Add an Operator to the Parameter Store."""
         # Should this be atomic?
         try:
@@ -110,24 +110,24 @@ class ManageOperators:
             logging.debug(
                 'Adding SSH key "%s/%s" to the Parameter Store in region "%s".',
                 self.ssh_key_prefix,
-                username,
+                user,
                 self.region,
             )
             self._client.put_parameter(
-                Name=f"{self.ssh_key_prefix}/{username}",
+                Name=f"{self.ssh_key_prefix}/{user}",
                 Value=ssh_key,
                 Type="SecureString",
                 Overwrite=overwrite,
             )
             logging.info(
                 'Added "%s"\'s SSH key to the Parameter Store in "%s".',
-                username,
+                user,
                 self.region,
             )
         except self._client.exceptions.ParameterAlreadyExists:
             logging.warning(
                 'SSH key for "%s" already exists in the Parameter Store in region "%s".',
-                username,
+                user,
                 self.region,
             )
             logging.warning(
@@ -137,49 +137,49 @@ class ManageOperators:
             logging.error(err)
             return 1
 
-        return self._update_cyhy_ops_users(username)
+        return self._update_cyhy_ops_users(user)
 
-    def remove_user(self, username: str, full: bool = False) -> int:
+    def remove_user(self, user: str, full: bool = False) -> int:
         """Remove an Operator from the Parameter Store."""
         # Should this be atomic?
         if full:
             try:
-                parameter_name = f"{self.ssh_key_prefix}/{username}"
+                parameter_name = f"{self.ssh_key_prefix}/{user}"
                 # Response is an empty dictionary on success.
                 self._client.delete_parameter(Name=parameter_name)
                 logging.info(
                     'Removed SSH key for "%s" from the Parameter Store in region "%s".',
-                    username,
+                    user,
                     self.region,
                 )
             except self._client.exceptions.ParameterNotFound:
                 logging.warning(
                     'SSH key for "%s" does not exist in the Parameter Store in region "%s".',
-                    username,
+                    user,
                     self.region,
                 )
             except ClientError as err:
                 logging.error(err)
                 return 1
 
-        return self._update_cyhy_ops_users(username, remove=True)
+        return self._update_cyhy_ops_users(user, remove=True)
 
-    def check_user(self, username: str) -> int:
+    def check_user(self, user: str) -> int:
         """Check for the existence of an Operator and return information."""
         try:
             response = self._client.get_parameter(
-                Name=f"{self.ssh_key_prefix}/{username}", WithDecryption=True
+                Name=f"{self.ssh_key_prefix}/{user}", WithDecryption=True
             )
             logging.info(
                 'User "%s" has the following SSH key in the Parameter Store of region "%s":',
-                username,
+                user,
                 self.region,
             )
             logging.info(response["Parameter"]["Value"])
         except self._client.exceptions.ParameterNotFound:
             logging.info(
                 'User "%s" does not have an SSH key in the Parameter Store of region "%s".',
-                username,
+                user,
                 self.region,
             )
         except ClientError as err:
@@ -192,9 +192,9 @@ class ManageOperators:
 
         log_msg = (
             'User "%s" is '
-            + ("" if username in enabled_users else "not ")
+            + ("" if user in enabled_users else "not ")
             + 'set as a CyHy Operator in region "%s".'
         )
-        logging.info(log_msg, username, self.region)
+        logging.info(log_msg, user, self.region)
 
         return 0
