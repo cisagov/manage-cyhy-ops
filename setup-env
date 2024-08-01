@@ -251,6 +251,10 @@ for req_file in "requirements-dev.txt" "requirements-test.txt" "requirements.txt
 done
 
 # Install all necessary mypy type stubs
+#
+# For some reason this one doesn't get picked up by the mypy
+# --install-types command.
+pip install boto3-stubs
 mypy --install-types src/
 
 # Install git pre-commit hooks now or later.
