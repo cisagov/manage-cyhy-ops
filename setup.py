@@ -98,7 +98,10 @@ setup(
         # field of the mypy pre-commit hook to avoid discrepancies in type
         # checking between environments.
         "dev": [
+            "types-boto3",
             "types-docopt",
+            "types-jmespath",
+            "types-requests",
             "types-setuptools",
         ],
         "test": [
