@@ -1,8 +1,10 @@
 # manage-cyhy-ops #
 
 [![GitHub Build Status](https://github.com/cisagov/manage-cyhy-ops/workflows/build/badge.svg)](https://github.com/cisagov/manage-cyhy-ops/actions)
+[![License](https://img.shields.io/github/license/cisagov/manage-cyhy-ops)](https://spdx.org/licenses/)
 [![CodeQL](https://github.com/cisagov/manage-cyhy-ops/workflows/CodeQL/badge.svg)](https://github.com/cisagov/manage-cyhy-ops/actions/workflows/codeql-analysis.yml)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/manage-cyhy-ops/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/manage-cyhy-ops?branch=develop)
+[![Code Style](https://img.shields.io/badge/Code%20Style-black-black)](https://github.com/psf/black)
 
 This is a Python package to manage the list of SSH users to add to a system
 using the
