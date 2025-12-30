@@ -35,7 +35,7 @@ Options:
 # Standard Python Libraries
 import logging
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 # Third-Party Libraries
 import docopt
@@ -76,7 +76,7 @@ USERNAME_VALIDATE = Or(
 
 def main() -> None:
     """Provide an interface to manage CyHy operators."""
-    args: Dict[str, str] = docopt.docopt(__doc__, version=__version__)
+    args: dict[str, str] = docopt.docopt(__doc__, version=__version__)
 
     schema: Schema = Schema(
         {
@@ -103,7 +103,7 @@ def main() -> None:
     )
 
     try:
-        validated_args: Dict[str, Any] = schema.validate(args)
+        validated_args: dict[str, Any] = schema.validate(args)
     except SchemaError as err:
         # Exit because one or more of the arguments were invalid.
         print(err, file=sys.stderr)
@@ -118,10 +118,10 @@ def main() -> None:
     logging.debug(validated_args)
 
     try:
-        regions: List = validated_args["--regions"].split(",")
+        regions: list = validated_args["--regions"].split(",")
         cyhy_ops: str = validated_args["--ssm-cyhy-ops"]
         ssh_prefix: str = validated_args["--ssm-ssh-prefix"]
-        managers: List[ManageOperators] = []
+        managers: list[ManageOperators] = []
         for region in regions:
             managers.append(ManageOperators(region, cyhy_ops, ssh_prefix))
     except Exception as err:
@@ -132,7 +132,7 @@ def main() -> None:
     overwrite_ssh_key = validated_args["--overwrite"]
     delete_ssh_key = validated_args["--full"]
 
-    results: List[int] = []
+    results: list[int] = []
     if validated_args["add"]:
         ssh_key: str = validated_args["SSH_KEY"]
 

@@ -2,7 +2,6 @@
 
 # Standard Python Libraries
 import logging
-from typing import List
 
 # Third-Party Libraries
 import boto3
@@ -27,8 +26,8 @@ class ManageOperators:
             logging.error('Unable to setup SSM client in region "%s".', region)
             raise err
 
-    def _get_cyhy_ops_list(self) -> List[str]:
-        users: List[str] = []
+    def _get_cyhy_ops_list(self) -> list[str]:
+        users: list[str] = []
         try:
             response = self._client.get_parameter(
                 Name=self.cyhy_ops_key, WithDecryption=True
@@ -47,7 +46,7 @@ class ManageOperators:
 
     def _update_cyhy_ops_users(self, user: str, remove: bool = False) -> int:
         """Update the list of CyHy Operators to use when an instance is built."""
-        users: List[str] = self._get_cyhy_ops_list()
+        users: list[str] = self._get_cyhy_ops_list()
         update_msg: str = 'Performed no operations for "%s"'
 
         logging.debug("Current CyHy Operators: %s.", users)
@@ -186,7 +185,7 @@ class ManageOperators:
             logging.error(err)
             return 1
 
-        enabled_users: List[str] = self._get_cyhy_ops_list()
+        enabled_users: list[str] = self._get_cyhy_ops_list()
         if not enabled_users:
             return 1
 
