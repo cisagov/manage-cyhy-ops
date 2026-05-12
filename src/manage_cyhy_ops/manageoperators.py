@@ -54,7 +54,8 @@ class ManageOperators:
         if remove:
             if user not in users:
                 logging.warning(
-                    'User "%s" is not in the list of active CyHy Operators in region "%s".',
+                    'User "%s" is not in the list of active CyHy Operators '
+                    'in region "%s".',
                     user,
                     self.region,
                 )
@@ -64,7 +65,8 @@ class ManageOperators:
         else:
             if user in users:
                 logging.warning(
-                    'User "%s" is already in the list of active CyHy Operators in region "%s".',
+                    'User "%s" is already in the list of active CyHy '
+                    'Operators in region "%s".',
                     user,
                     self.region,
                 )
@@ -125,12 +127,14 @@ class ManageOperators:
             )
         except self._client.exceptions.ParameterAlreadyExists:
             logging.warning(
-                'SSH key for "%s" already exists in the Parameter Store in region "%s".',
+                'SSH key for "%s" already exists in the Parameter Store '
+                'in region "%s".',
                 user,
                 self.region,
             )
             logging.warning(
-                'If you need to overwrite this value, please use the "--overwrite" switch.'
+                "If you need to overwrite this value, please use the "
+                '"--overwrite" switch.'
             )
         except ClientError as err:
             logging.error(err)
@@ -153,7 +157,8 @@ class ManageOperators:
                 )
             except self._client.exceptions.ParameterNotFound:
                 logging.warning(
-                    'SSH key for "%s" does not exist in the Parameter Store in region "%s".',
+                    'SSH key for "%s" does not exist in the Parameter Store '
+                    'in region "%s".',
                     user,
                     self.region,
                 )
@@ -170,14 +175,16 @@ class ManageOperators:
                 Name=f"{self.ssh_key_prefix}/{user}", WithDecryption=True
             )
             logging.info(
-                'User "%s" has the following SSH key in the Parameter Store of region "%s":',
+                'User "%s" has the following SSH key in the Parameter Store '
+                'of region "%s":',
                 user,
                 self.region,
             )
             logging.info(response["Parameter"]["Value"])
         except self._client.exceptions.ParameterNotFound:
             logging.info(
-                'User "%s" does not have an SSH key in the Parameter Store of region "%s".',
+                'User "%s" does not have an SSH key in the Parameter Store '
+                'of region "%s".',
                 user,
                 self.region,
             )

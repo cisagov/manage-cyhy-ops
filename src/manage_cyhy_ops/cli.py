@@ -84,7 +84,9 @@ def main() -> None:
                 str,
                 lambda s: False
                 not in map(lambda r: r in ALLOWED_REGIONS, s.split(",")),
-                error=f"Invalid region(s) provided. Valid regions are: {ALLOWED_REGIONS}",
+                error=(
+                    f"Invalid region(s) provided. Valid regions are: {ALLOWED_REGIONS}"
+                ),
             ),
             "--ssm-ssh-prefix": SSM_KEY_VALIDATE,
             "--ssm-cyhy-ops": SSM_KEY_VALIDATE,
