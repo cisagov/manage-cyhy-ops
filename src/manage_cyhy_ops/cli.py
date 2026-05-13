@@ -82,9 +82,10 @@ def main() -> None:
         {
             "--regions": And(
                 str,
-                lambda s: False
-                not in map(lambda r: r in ALLOWED_REGIONS, s.split(",")),
-                error=f"Invalid region(s) provided. Valid regions are: {ALLOWED_REGIONS}",
+                lambda s: all(r in ALLOWED_REGIONS for r in s.split(",")),
+                error=(
+                    f"Invalid region(s) provided. Valid regions are: {ALLOWED_REGIONS}"
+                ),
             ),
             "--ssm-ssh-prefix": SSM_KEY_VALIDATE,
             "--ssm-cyhy-ops": SSM_KEY_VALIDATE,
@@ -161,5 +162,5 @@ def main() -> None:
 
     # Right now all return statuses from the Manager are 1, but that is not
     # guaranteed in the future. This handles any non-successful error code.
-    if True in map(lambda e: e != 0, results):
+    if any(e != 0 for e in results):
         sys.exit(1)
